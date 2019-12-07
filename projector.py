@@ -42,11 +42,11 @@ fileNum = 0
 for file in dirs:
     fileNum+=1
 
-#pro
+#initializes projection
 gameDisplay = pygame.display.set_mode((display_width,display_height))#,pygame.FULLSCREEN)
 pygame.display.set_caption('Initializing Print')
 
-limSwitch = gpio.input(lim)
+#limSwitch = gpio.input(lim) 
 #print(limSwitch)
 
 #while x:
@@ -59,10 +59,11 @@ limSwitch = gpio.input(lim)
 black = (0,0,0)
 white = (255,255,255)
 
-
+#projecting the image
 def image(x,y):
     gameDisplay.blit(layerImg, (x,y))
 
+#moving the stepper motor down
 def stepforward():
     #limSwitch = gpio.input(lim)
     #while not limSwitch:
@@ -75,6 +76,7 @@ def stepforward():
         pygame.time.delay(1)
         x = x+1
 
+#moving the stepper motor up
 def stepbackward():
     #limSwitch = gpio.input(lim)
     #while not limSwitch:
@@ -87,10 +89,7 @@ def stepbackward():
         pygame.time.delay(1)
         x = x+1
 
-x = 0#(display_width * 0.45)
-y = 0#(display_height * 0.8)
-layer = 1
-
+#turning motor off
 def reset():
     gpio.output(ena,True)
     gpio.output(ms1,False)
@@ -99,18 +98,27 @@ def reset():
     gpio.output(step,False)
     gpio.output(direc,False)
 
-gpio.output(ena,False)
 
-while layer <= fileNum:
+
+#defining x and y coordinates (upper left) of image projected
+x = 0#(display_width * 0.45)
+y = 0#(display_height * 0.8)
+
+layer = 1 #first layer
+gpio.output(ena,False) #enable motors for movement
+
+while layer <= fileNum: #while the layer number is lower than the total number of slices
+    #accessing the appropriate image for the layer
     if layer <= 10:
         layerImg = pygame.image.load('/home/pi/Desktop/slices/out000'+str(layer-1)+'.png')
     elif layer <= 100:
         layerImg = pygame.image.load('/home/pi/Desktop/slices/out00'+str(layer-1)+'.png')
     else:
         layerImg = pygame.image.load('/home/pi/Desktop/slices/out0'+str(layer-1)+'.png')
-    layerImg = pygame.transform.scale(layerImg,(800,600))
+    #transform image
+    layerImg = pygame.transform.scale(layerImg,(display_width,display_height))
 
-    limSwitch = gpio.input(lim)
+    #limSwitch = gpio.input(lim)
     #if not (limSwitch == 0):
         #if layer % 2 != 0:
            # stepforward()
@@ -118,21 +126,28 @@ while layer <= fileNum:
           #  stepbackward()
     #else:
        # break
-    stepforward()
-    pygame.display.set_caption('Layer Number: ' + str(layer))
 
-    gameDisplay.fill(black)
+    stepforward() #move downward
+    pygame.display.set_caption('Layer Number: ' + str(layer)) #display layer number
+
+    #display black screen
+    gameDisplay.fill(black) 
     pygame.display.update()
 
+    #project image for curetime
     image(0,0)
     pygame.display.update()
     pygame.time.delay(curetime)
+
+    #display black screen
     gameDisplay.fill(black)
     pygame.display.update()
 
+    #move back up
     stepbackward()
     pygame.time.delay(1000)
 
+    #increase layer
     layer = layer + 1
 
 reset()
